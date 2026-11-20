@@ -81,13 +81,15 @@ The first experiment will establish a stationary baseline, move a magnet relativ
 
 ```text
 .
-├── CMakeLists.txt       # Pico SDK build configuration
-├── src/
-│   └── main.cpp         # Minimal Pico 2 onboard LED blink program
-├── README.md            # Project overview, architecture sketches, and build steps
-├── pico-sdk/            # Local SDK checkout; ignored by Git
-├── .tooling/            # Local CMake, Ninja, and Arm compiler; ignored by Git
-└── build/               # Generated build output; ignored by Git
+├── CMakeLists.txt          # Top-level Pico SDK configuration
+├── firmware/
+│   ├── CMakeLists.txt      # Firmware target configuration
+│   └── src/
+│       └── main.cpp        # Minimal Pico 2 onboard LED blink program
+├── README.md               # Project overview, layout, schematics, and build steps
+├── pico-sdk/               # Local SDK checkout; ignored by Git
+├── .tooling/               # Local CMake, Ninja, and Arm compiler; ignored by Git
+└── build/                  # Generated build output; ignored by Git
 ```
 
 Only the project files are tracked. The Pico SDK, compiler, and generated build output are local dependencies and are excluded by `.gitignore`.
@@ -102,10 +104,10 @@ Only the project files are tracked. The Pico SDK, compiler, and generated build 
 
 ## Build on Windows
 
-The local development setup used for the current build has CMake and Ninja under `.tooling/python/`, the Arm GNU bare-metal toolchain under `.tooling/arm/bin/`, and the Pico SDK at `pico-sdk/`.
+The local development setup used for the current build has CMake under `.tooling/cmake-fresh/`, Ninja under `.tooling/python/`, the Arm GNU bare-metal toolchain under `.tooling/arm/bin/`, and the Pico SDK at `pico-sdk/`.
 
 ```powershell
-$env:Path = (Resolve-Path '.tooling\python\cmake\data\bin').Path + ';' + (Resolve-Path '.tooling\python\bin').Path + ';' + (Resolve-Path '.tooling\arm\bin').Path + ';' + $env:Path
+$env:Path = (Resolve-Path '.tooling\cmake-fresh\cmake\data\bin').Path + ';' + (Resolve-Path '.tooling\python\bin').Path + ';' + (Resolve-Path '.tooling\arm\bin').Path + ';' + $env:Path
 $env:PICO_SDK_PATH = (Resolve-Path 'pico-sdk').Path
 cmake -S . -B build -G Ninja -DPICO_BOARD=pico2 -DPICO_NO_PICOTOOL=1
 cmake --build build
@@ -120,3 +122,13 @@ The successful build artifact is `build/kb_from_scratch.elf`. To produce a UF2 a
 3. Read and log one sensor, then characterize the Jade Pro switch over measured travel.
 4. Develop calibration, travel mapping, adjustable actuation, and Rapid Trigger against recorded traces.
 5. Calculate scan timing, choose the full sensing architecture, and design the keyboard schematic, PCB, and enclosure.
+
+## Pre-arrival checklist
+
+- [x] Create the GitHub repository and initial firmware directory structure.
+- [x] Install VS Code and the Pico SDK build toolchain; compile the Pico 2 LED firmware.
+- [ ] Design the single-switch mechanical test fixture in CAD.
+- [ ] Write a Python script to simulate Hall sensor readings.
+- [ ] Implement normalized key travel and adjustable actuation logic.
+- [ ] Implement and evaluate Rapid Trigger with simulated data.
+- [ ] Review the DRV5055 datasheet and prepare the verified breadboard schematic.
