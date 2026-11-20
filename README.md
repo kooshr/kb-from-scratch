@@ -1,14 +1,84 @@
-# kb-from-scratch
+# Custom Hall Effect Keyboard
 
-Custom Hall Effect keyboard development, starting with a minimal Raspberry Pi Pico 2 / RP2350 firmware build.
+An in-progress, from-scratch 75% ANSI Hall Effect keyboard project. The goal is to develop the electronics, firmware, sensing algorithms, and mechanical design as small, testable milestones.
 
-## Milestone A: first firmware build
+## Project overview
 
-The initial program blinks the Pico 2's onboard LED. It does not use the Hall sensor or USB yet.
+The planned keyboard uses Gateron Magnetic Jade Pro switches, one analog Hall sensor per key, and a Raspberry Pi Pico 2 (RP2350) for sensing and USB HID. Planned firmware features include adjustable actuation, per-key calibration, Rapid Trigger, and later configurable multi-action and opposing-direction behavior.
 
-### Build on Windows PowerShell
+The first hardware experiment is a single sensor and switch. We will measure the sensor response and switch travel before selecting a full-keyboard scanning architecture or committing to a PCB. The analog multiplexer approach shown below is a candidate for evaluation, not a selected design.
 
-This repository expects a local Pico SDK checkout at `pico-sdk/` and the Arm GNU bare-metal compiler on `PATH`. CMake and Ninja are stored under `.tooling/python/` for this setup.
+## System architecture sketch
+
+This is the current functional plan for the complete keyboard, not a finalized electrical schematic. The sensor interface, ADC throughput, filtering latency, and multiplexing strategy still need measurement and design review.
+
+```mermaid
+flowchart LR
+    S[Hall sensors<br/>one per switch] --> M[Analog selection<br/>architecture TBD]
+    M --> A[Pico 2 ADC<br/>RP2350]
+    A --> C[Calibration and<br/>travel mapping]
+    C --> K[Key state and<br/>actuation engine]
+    K --> U[USB HID<br/>keyboard reports]
+    K -. later .-> F[Rapid Trigger and<br/>advanced key behavior]
+```
+
+## One-switch prototype wiring
+
+The following is the proposed breadboard connection for the initial sensor test. **It is not yet a verified, build-ready schematic:** confirm the exact DRV5055A4QLPG package pinout and electrical limits against the TI datasheet, and confirm Pico 2 ADC limits, before wiring or applying power. Do not infer the sensor pin order from a generic TO-92 drawing.
+
+```mermaid
+flowchart LR
+    subgraph Pico2[ Raspberry Pi Pico 2 ]
+        V[3V3 OUT]
+        G[GND]
+        ADC[GP26 / ADC0]
+    end
+    subgraph Sensor[ TI DRV5055A4QLPG ]
+        VS[VCC]
+        GS[GND]
+        OUT[Analog OUT]
+    end
+    V --> VS
+    G --> GS
+    OUT --> ADC
+    V -. 100 nF ceramic<br/>close to sensor .- G
+```
+
+| Pico 2 connection | Proposed sensor connection | Status |
+| --- | --- | --- |
+| 3V3(OUT) | VCC | Verify sensor supply range and package pinout first |
+| GND | GND | Common ground |
+| GP26 / ADC0 | Analog OUT | Verify output range against ADC input limits |
+| — | 100 nF from VCC to GND, close to sensor | Decoupling capacitor |
+
+The first experiment will establish a stationary baseline, move a magnet relative to the sensor, and record ADC readings. Once the Jade Pro switch is available, an adjustable fixture will measure readings across physical switch travel. Monotonicity, noise, repeatability, and usable resolution must be measured before normalizing sensor values to key travel.
+
+## Repository contents
+
+```text
+.
+├── CMakeLists.txt       # Pico SDK build configuration
+├── src/
+│   └── main.cpp         # Minimal Pico 2 onboard LED blink program
+├── README.md            # Project overview, architecture sketches, and build steps
+├── pico-sdk/            # Local SDK checkout; ignored by Git
+├── .tooling/            # Local CMake, Ninja, and Arm compiler; ignored by Git
+└── build/               # Generated build output; ignored by Git
+```
+
+Only the project files are tracked. The Pico SDK, compiler, and generated build output are local dependencies and are excluded by `.gitignore`.
+
+## Current status
+
+- **Software foundation:** a minimal C++ program compiles for the Pico 2 / RP2350 Arm target.
+- **Firmware behavior:** the program blinks the board's default onboard LED.
+- **Sensor circuit:** proposed only; datasheet pinout and electrical checks are still required before breadboarding.
+- **USB and UF2:** USB is not enabled in this first program. The current build skips Picotool, so it produces an ELF file but not a flashable UF2.
+- **Full keyboard schematic and PCB:** not designed yet; the scanning architecture remains open pending sensor measurements and timing calculations.
+
+## Build on Windows
+
+The local development setup used for the current build has CMake and Ninja under `.tooling/python/`, the Arm GNU bare-metal toolchain under `.tooling/arm/bin/`, and the Pico SDK at `pico-sdk/`.
 
 ```powershell
 $env:Path = (Resolve-Path '.tooling\python\cmake\data\bin').Path + ';' + (Resolve-Path '.tooling\python\bin').Path + ';' + (Resolve-Path '.tooling\arm\bin').Path + ';' + $env:Path
@@ -17,6 +87,12 @@ cmake -S . -B build -G Ninja -DPICO_BOARD=pico2 -DPICO_NO_PICOTOOL=1
 cmake --build build
 ```
 
-The expected firmware artifact is `build/kb_from_scratch.elf`. This first build skips Picotool because the environment cannot run Git's MSYS submodule fetch; adding Picotool will produce the flashable UF2 in the next setup step. The LED program is ready to flash after that conversion step.
+The successful build artifact is `build/kb_from_scratch.elf`. To produce a UF2 and flash the board, install/configure Picotool, rebuild without `PICO_NO_PICOTOOL=1`, then hold **BOOTSEL** while connecting the Pico 2 and copy the resulting UF2 to its `RPI-RP2` drive.
 
-The SDK and toolchain are ignored by Git so each developer can install them locally without checking megabytes of third-party files into the project. They are not yet provisioned by a reproducible setup script.
+## Roadmap
+
+1. Finish the software foundation and make the development setup reproducible.
+2. Verify the official TI sensor datasheet details and prepare a checked breadboard schematic.
+3. Read and log one sensor, then characterize the Jade Pro switch over measured travel.
+4. Develop calibration, travel mapping, adjustable actuation, and Rapid Trigger against recorded traces.
+5. Calculate scan timing, choose the full sensing architecture, and design the keyboard schematic, PCB, and enclosure.
