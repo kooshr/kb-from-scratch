@@ -8,6 +8,30 @@ The planned keyboard uses Gateron Magnetic Jade Pro switches, one analog Hall se
 
 The first hardware experiment is a single sensor and switch. We will measure the sensor response and switch travel before selecting a full-keyboard scanning architecture or committing to a PCB. The analog multiplexer approach shown below is a candidate for evaluation, not a selected design.
 
+## Proposed keyboard layout
+
+The target is a custom 75% ANSI layout based on the preferred KLE Revision 1.0 arrangement. It has dedicated arrow keys, a 2u x 2u top-right reserved space for a 20 mm rotary knob, and a 2.5u right Shift. The knob reservation is not a key or encoder footprint yet. The final physical key count still needs to be checked from the finished layout before PCB design.
+
+| Row | Layout |
+| --- | --- |
+| Function | Esc; F1-F4; F5-F8; F9-F12; 2u x 2u knob reservation at top-right |
+| Number | Grave, 1-0, -, =, 1.75u Backspace |
+| Q row | 1.5u Tab, Q-P, [, ], 1.25u backslash, Ins, Home |
+| Home row | 1.75u Caps, A-L, ;, ', 2u Enter, Del, PgDn |
+| Shift row | 2.25u left Shift, Z-M, comma, period, slash, 2.5u right Shift, Up, PgUp |
+| Bottom row | 1.25u Ctrl, 1.25u Win, 1.25u Alt, 6.25u Space, 1.25u Alt, 1.25u Fn, 1.25u Ctrl, Left, Down, Right |
+
+KLE layout seed (the knob is a placeholder tile):
+
+```javascript
+["Esc",{x:0.5},"F1","F2","F3","F4",{x:0.5},"F5","F6","F7","F8",{x:0.5},"F9","F10","F11","F12",{x:0.5,a:7,w:2,h:2},"Knob"],
+[{y:0.25,a:4},"`","1","2","3","4","5","6","7","8","9","0","-","=",{w:1.75},"Backspace"],
+[{w:1.5},"Tab","Q","W","E","R","T","Y","U","I","O","P","[","]",{w:1.25},"\\","Ins","Home"],
+[{w:1.75},"Caps","A","S","D","F","G","H","J","K","L",";","'",{w:2},"Enter","Del","PgDn"],
+[{w:2.25},"Shift","Z","X","C","V","B","N","M",",",".","/",{w:2.5},"Shift","Up","PgUp"],
+[{w:1.25},"Ctrl",{w:1.25},"Win",{w:1.25},"Alt",{w:6.25},"Space",{w:1.25},"Alt",{w:1.25},"Fn",{w:1.25},"Ctrl","Left","Down","Right"]
+```
+
 ## System architecture sketch
 
 This is the current functional plan for the complete keyboard, not a finalized electrical schematic. The sensor interface, ADC throughput, filtering latency, and multiplexing strategy still need measurement and design review.
