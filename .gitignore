@@ -66,3 +66,10 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# Local SDK/toolchain copies and generated firmware output
+.tooling/
+pico-sdk/
+build/
+*.uf2
+*.elf
